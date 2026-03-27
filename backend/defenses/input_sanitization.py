@@ -1,7 +1,6 @@
 from typing import AsyncGenerator, Optional
 from fastapi.responses import StreamingResponse
 from ..attacks.system_prompt_helper import load_defense_prompt
-from ..attacks.system_prompt_helper import load_defense_prompt
 
 async def run(prompt: str) -> Optional[StreamingResponse]:
     """

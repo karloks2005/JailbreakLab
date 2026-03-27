@@ -11,7 +11,7 @@ from typing import Optional
 
 def get_system_prompts_file() -> Path:
     """Get the path to system_prompts.json."""
-    return Path(__file__).parent / "system_prompts.json"
+    return Path(__file__).parent.parent / "system_prompts.json"
 
 
 def load_system_prompt(attack_key: str) -> str:
