@@ -4,6 +4,8 @@ import { Send } from "lucide-react";
 interface PromptInputProps {
    message: string;
    setMessage: (message: string) => void;
+   systemPrompt: string;
+   setSystemPrompt: (prompt: string) => void;
    isExecuting: boolean;
    onSend: () => void;
 }
@@ -11,6 +13,8 @@ interface PromptInputProps {
 export default function PromptInput({
    message,
    setMessage,
+   systemPrompt,
+   setSystemPrompt,
    isExecuting,
    onSend,
 }: PromptInputProps) {
@@ -24,6 +28,14 @@ export default function PromptInput({
    return (
       <div className="bg-[#1a1a24]/80 backdrop-blur-xl rounded-xl p-4 border border-[#2d2d3d] shadow-2xl">
          <h2 className="text-xl font-bold text-[#f8fafc] mb-3">Test Prompt</h2>
+         <textarea
+            value={systemPrompt}
+            onChange={(e) => setSystemPrompt(e.target.value)}
+            placeholder="Optional system prompt (applied before attack prompt)"
+            className="w-full mb-3 bg-[#252532] border-2 border-[#2d2d3d] rounded-lg px-3 py-2 text-[#f8fafc] placeholder-[#64748b] hover:border-[#3d3d4d] focus:border-[#6366f1] resize-none h-16 text-base font-medium leading-relaxed"
+            rows={3}
+            disabled={isExecuting}
+         />
          <div className="flex gap-2">
             <textarea
                value={message}

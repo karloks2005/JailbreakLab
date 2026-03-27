@@ -26,6 +26,7 @@ function App() {
    const [selectedDefense, setSelectedDefense] = useState<Defense>(defenses[0]);
    const [selectedModel, setSelectedModel] = useState<Model>(models[0]);
    const [message, setMessage] = useState("");
+   const [systemPrompt, setSystemPrompt] = useState("");
    const [prompts, setPrompts] = useState<Prompt[]>([]);
    const [infoModalOpen, setInfoModalOpen] = useState(false);
    const [infoTitle, setInfoTitle] = useState("");
@@ -93,6 +94,7 @@ function App() {
                attack: selectedAttack.id,
                defense: selectedDefense.id,
                model: selectedModel.id,
+               system_prompt: window.localStorage.getItem("globalSystemPrompt") || "",
                isBlocked: false,
             }),
             signal: controller.signal,
@@ -327,6 +329,8 @@ function App() {
                      <PromptInput
                         message={message}
                         setMessage={setMessage}
+                        systemPrompt={systemPrompt}
+                        setSystemPrompt={setSystemPrompt}
                         isExecuting={isExecuting}
                         onSend={handleSend}
                      />
