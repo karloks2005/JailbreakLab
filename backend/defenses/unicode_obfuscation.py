@@ -2,6 +2,7 @@ import re
 import unicodedata
 from typing import Optional, AsyncGenerator
 from fastapi.responses import StreamingResponse
+from ..attacks.system_prompt_helper import load_defense_prompt
 
 ZERO_WIDTH = {
     "\u200b", "\u200c", "\u200d", "\u2060", "\ufeff"

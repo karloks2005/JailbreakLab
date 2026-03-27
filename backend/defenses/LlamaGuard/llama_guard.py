@@ -5,6 +5,7 @@ import torch
 from fastapi.responses import StreamingResponse
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from huggingface_hub import login as hf_login
+from ...attacks.system_prompt_helper import load_defense_prompt
 
 
 # Model cache for Llama Guard 3
@@ -210,9 +211,14 @@ async def run(prompt: str, device: str = "cpu") -> Optional[StreamingResponse]:
     Llama Guard is a content safety classifier that can detect various types of
     unsafe content including violence, hate speech, sexual content, and more.
     """
+    # Load defense prompt and combine with user prompt
+    defense_prompt = load_defense_prompt("llama_guard")
+    prompt_to_check = prompt
+    if defense_prompt.strip():
+        prompt_to_check = f"{defense_prompt}\n\n{prompt}"
 
     try:
-        is_unsafe, category = _check_safety(prompt, device=device, version=3)
+        is_unsafe, category = _check_safety(prompt_to_check, device=device, version=3)
 
         if is_unsafe:
             category_name = get_category_name(category) if category else "Unsafe Content"
@@ -244,9 +250,14 @@ async def run_v4(prompt: str, device: str = "cpu") -> Optional[StreamingResponse
     Llama Guard 4 is Meta's latest safeguard model with improved accuracy and 
     expanded safety categories compared to version 3.
     """
+    # Load defense prompt and combine with user prompt
+    defense_prompt = load_defense_prompt("llama_guard_4")
+    prompt_to_check = prompt
+    if defense_prompt.strip():
+        prompt_to_check = f"{defense_prompt}\n\n{prompt}"
 
     try:
-        is_unsafe, category = _check_safety(prompt, device=device, version=4)
+        is_unsafe, category = _check_safety(prompt_to_check, device=device, version=4)
 
         if is_unsafe:
             category_name = get_category_name(category) if category else "Unsafe Content"

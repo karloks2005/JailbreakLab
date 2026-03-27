@@ -1,6 +1,7 @@
 #main.py
 from .common import process_target_response, initialize_conversations, extract_json
 from .system_prompts import *
+from ..system_prompt_helper import load_system_prompt, combine_system_and_user_prompt
 
 import os
 os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
@@ -33,10 +34,15 @@ async def run_PAIR_attack(
     session_id: Optional[str] = None,
 ) -> AsyncGenerator[bytes, None]:
     yield b"[PROGRESS] 0\n"
+    
+    # Load and combine system prompt
+    system_prompt = load_system_prompt("PAIR")
+    goal_to_use = combine_system_and_user_prompt(system_prompt, template) if system_prompt.strip() else template
+    
     device = "cuda" if torch.cuda.is_available() else "cpu"
     
     # PAIR Core Variables
-    goal = template
+    goal = goal_to_use
     
     n_iterations = 5 # put to  for testing H
     n_streams = 10 # Parallel attack paths, on 6 for testing. For the best results it should go as high as possible. In the original paper the recommend 20

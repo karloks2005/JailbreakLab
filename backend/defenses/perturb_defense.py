@@ -9,7 +9,8 @@ from nltk.tokenize import word_tokenize
 from typing import Optional, List, Dict
 from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv, find_dotenv
-from openai import OpenAI# Load the .env file
+from openai import OpenAI
+from ..attacks.system_prompt_helper import load_defense_prompt# Load the .env file
 
 load_dotenv(find_dotenv())
 
@@ -20,6 +21,11 @@ client = OpenAI()
 
 def run_semantic_perturb(text: str, semantic_q=0.30) -> str:
     """Your code: Swaps words for synonyms using NLTK."""
+    # Load defense prompt and combine with text
+    defense_prompt = load_defense_prompt("semantic_perturbation")
+    if defense_prompt.strip():
+        text = f"{defense_prompt}\n\n{text}"
+    
     tokens = word_tokenize(text)
     pos_tags = nltk.pos_tag(tokens)
     sem_text = []
@@ -39,6 +45,11 @@ def run_semantic_perturb(text: str, semantic_q=0.30) -> str:
 
 def run_character_perturb(text: str, char_q=0.03)-> str:
     """SmoothLLM Core: Randomly swaps characters to break token-based attacks."""
+    # Load defense prompt and combine with text
+    defense_prompt = load_defense_prompt("character_perturbation")
+    if defense_prompt.strip():
+        text = f"{defense_prompt}\n\n{text}"
+    
     chars = list(text)
     for i in range(len(chars)):
         # Only swap letters, leave spaces and punctuation alone

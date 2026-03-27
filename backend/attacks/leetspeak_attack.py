@@ -6,6 +6,7 @@ Leetspeak
 from typing import Optional, AsyncGenerator
 from fastapi.responses import StreamingResponse
 from defenses.defense_manager import apply_defense
+from .system_prompt_helper import load_system_prompt, combine_system_and_user_prompt
 import os
 import warnings
 import logging
@@ -72,7 +73,11 @@ def from_leetspeak(text: str) -> str:
 async def run_leetspeak_attack(model_id: str, template: str, defense: str, session_id: Optional[str] = None) -> AsyncGenerator[bytes, None]:
     yield b"[PROGRESS] 0\n"
     
-    question = to_leetspeak(template)
+    # Load and combine system prompt
+    system_prompt = load_system_prompt("leetspeak-attack")
+    template_to_use = combine_system_and_user_prompt(system_prompt, template) if system_prompt.strip() else template
+    
+    question = to_leetspeak(template_to_use)
     language_game = "Leetspeak"
     prompt = f"""My question is "{question}", which is in {language_game} format.
 Your answer MUST obey:

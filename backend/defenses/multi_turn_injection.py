@@ -1,7 +1,8 @@
 from typing import Optional, AsyncGenerator
 from fastapi.responses import StreamingResponse
 from history_cache import get_recent
-from openai import OpenAI# Load the .env file
+from openai import OpenAI
+from ..attacks.system_prompt_helper import load_defense_prompt# Load the .env file
 from dotenv import load_dotenv, find_dotenv
 
 load_dotenv(find_dotenv())
@@ -72,7 +73,12 @@ async def run(prompt: str, session_id: Optional[str] = None) -> Optional[Streami
     conversation_text = "\n".join(f"Turn {i+1}: {text}" for i, text in enumerate(convo))
     user_prompt = f"Conversation:\n{conversation_text}\n\nClassification:"
 
-    verdict = get_openai_response_sync(0, SYSTEM_PROMPT, user_prompt)
+    # Load defense prompt as system prompt
+    system_prompt = load_defense_prompt("multi_turn")
+    if not system_prompt.strip():
+        system_prompt = SYSTEM_PROMPT  # fallback
+
+    verdict = get_openai_response_sync(0, system_prompt, user_prompt)
     print("\n\n\n  VERDICT \n\n\n")
     if verdict.startswith("UNSAFE"):
         return _blocked(conversation_text, prompt)

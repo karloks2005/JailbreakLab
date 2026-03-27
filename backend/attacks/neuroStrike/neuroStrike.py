@@ -7,6 +7,7 @@ Based on the profiling attack from the NeuroStrike paper/repo.
 from typing import Optional, AsyncGenerator, Dict, Tuple
 from fastapi.responses import StreamingResponse
 from defenses.defense_manager import apply_defense
+from ..system_prompt_helper import load_system_prompt, combine_system_and_user_prompt
 import os
 import warnings
 import logging
@@ -14,6 +15,7 @@ import torch
 import traceback
 import asyncio
 import pickle
+import json
 from pathlib import Path
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
@@ -129,6 +131,17 @@ async def run_neurostrike_attack(model_id: str, template: str, defense: str, ses
     try:
         yield b"[PROGRESS] 0\n"
         
+        # Load system prompt from JSON
+        system_prompt = load_system_prompt("neurostrike")
+        
+        # Combine system prompt with user template
+        if system_prompt.strip():
+            combined_template = f"{system_prompt}\n\n{template}"
+        else:
+            combined_template = template
+        
+        yield b"[PROGRESS] 10\n"
+        
         # Load pre-computed safety neuron data
         safety_neurons = load_safety_neurons(model_id)
         yield b"[PROGRESS] 20\n"
@@ -143,7 +156,7 @@ async def run_neurostrike_attack(model_id: str, template: str, defense: str, ses
         
         # Generate response with pruned safety neurons
         def _generate():
-            encoded = tokenizer(template, return_tensors="pt").to(model.device)
+            encoded = tokenizer(combined_template, return_tensors="pt").to(model.device)
             with torch.no_grad():
                 outputs = model.generate(
                     **encoded,

@@ -4,6 +4,7 @@ from typing import AsyncGenerator, Optional
 import torch
 from fastapi.responses import StreamingResponse
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, pipeline
+from ...attacks.system_prompt_helper import load_defense_prompt
 
 
 _CLASSIFIER = None
@@ -45,10 +46,15 @@ async def run(prompt: str) -> Optional[StreamingResponse]:
     PIGuard defense: Uses a fine-tuned transformer model to detect prompt injection attacks.
     Returns a StreamingResponse if injection is detected, otherwise None.
     """
+    # Load defense prompt and combine with prompt
+    defense_prompt = load_defense_prompt("piguard")
+    prompt_to_check = prompt
+    if defense_prompt.strip():
+        prompt_to_check = f"{defense_prompt}\n\n{prompt}"
 
     try:
         classifier = _load_classifier(device="cpu")
-        result = classifier([prompt])[0]
+        result = classifier([prompt_to_check])[0]
 
         label = result.get("label", "").lower()
         score = result.get("score", 0.0)

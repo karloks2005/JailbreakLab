@@ -17,6 +17,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from fastapi.responses import StreamingResponse
 import nanogcg
 from nanogcg import GCGConfig
+from .system_prompt_helper import load_system_prompt, combine_system_and_user_prompt
 
 from defenses.defense_manager import apply_defense
 
@@ -170,11 +171,16 @@ async def run_gcg_attack(
         Bytes containing progress updates and results
     """
     yield b"[PROGRESS] 0\n"
+    
+    # Load and combine system prompt
+    system_prompt = load_system_prompt("GCG")
+    template_to_use = combine_system_and_user_prompt(system_prompt, template) if system_prompt.strip() else template
+    
     device = "cuda" if torch.cuda.is_available() else "cpu"
     
     # Check defense first
     try:
-        blocked, resp = await apply_defense(defense, template, model_id=model_id, device=device, session_id=session_id, skip_progress=True)
+        blocked, resp = await apply_defense(defense, template_to_use, model_id=model_id, device=device, session_id=session_id, skip_progress=True)
         if blocked:
             if resp and isinstance(resp, StreamingResponse):
                 async for chunk in resp.body_iterator:
@@ -244,7 +250,7 @@ async def run_gcg_attack(
         # Default target output
         target_output = "Sure, here is a response to your request"
         
-        async for chunk in attack.attack(template, target_output):
+        async for chunk in attack.attack(template_to_use, target_output):
             yield chunk
             
     except Exception as e:

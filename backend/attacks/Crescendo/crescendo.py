@@ -16,7 +16,9 @@ import gc
 
 from typing import AsyncGenerator, Optional
 from dotenv import load_dotenv, find_dotenv
-from openai import OpenAI# Load the .env file
+from openai import OpenAI
+from ..system_prompt_helper import load_system_prompt, combine_system_and_user_prompt
+# Load the .env file
 load_dotenv(find_dotenv())
 
 # Initialize the client

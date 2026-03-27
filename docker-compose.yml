@@ -17,8 +17,8 @@ services:
                cpus: "1"
       environment:
          - REDIS_URL=redis://redis:6379/0
-         - NVIDIA_VISIBLE_DEVICES=all
-      runtime: nvidia
+        # - NVIDIA_VISIBLE_DEVICES=all
+      #runtime: nvidia
       depends_on:
          - redis
 

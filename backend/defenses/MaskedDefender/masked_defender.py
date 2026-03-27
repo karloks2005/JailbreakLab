@@ -5,6 +5,7 @@ import torch
 from fastapi.responses import StreamingResponse
 from torch import nn
 from transformers import AutoTokenizer, AutoModel
+from ...attacks.system_prompt_helper import load_defense_prompt
 
 
 CHECKPOINT_NAME = "masked_defender.pth"  # Change this to your actual file name that represents your trained model
@@ -77,11 +78,16 @@ def _load_defender(device: str = "cpu") -> tuple[MaskedDefenderClassifier, AutoT
 
 def _classify_prompt(prompt: str, device: str = "cpu") -> dict:
     """Run the classifier on a single prompt and return defense-style dict."""
+    # Load defense prompt and combine with prompt
+    defense_prompt = load_defense_prompt("masked_defender")
+    prompt_to_check = prompt
+    if defense_prompt.strip():
+        prompt_to_check = f"{defense_prompt}\n\n{prompt}"
 
     model, tokenizer = _load_defender(device=device)
 
     encoded = tokenizer(
-        [prompt],
+        [prompt_to_check],
         padding=True,
         truncation=True,
         max_length=128,

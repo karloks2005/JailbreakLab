@@ -16,6 +16,7 @@ from nltk.corpus import stopwords
 import gc
 from fastapi.responses import StreamingResponse
 from defenses.defense_manager import apply_defense
+from .system_prompt_helper import load_system_prompt, combine_system_and_user_prompt
 import asyncio
 from typing import Optional
 
@@ -350,11 +351,15 @@ async def run_fcb_attack(model_id: str, template: str, defense: str, session_id:
     """
     yield b"[PROGRESS] 0\n"
     
+    # Load and combine system prompt
+    system_prompt = load_system_prompt("FCB")
+    template_to_use = combine_system_and_user_prompt(system_prompt, template) if system_prompt.strip() else template
+    
     device = "cuda" if torch.cuda.is_available() else "cpu"
     
     # 1) Check defense on original prompt first
     yield b"[PROGRESS] 5\n"
-    blocked, blocked_response = await apply_defense(defense, template, session_id=session_id, model_id=model_id)
+    blocked, blocked_response = await apply_defense(defense, template_to_use, session_id=session_id, model_id=model_id)
     if blocked:
         if isinstance(blocked_response, StreamingResponse):
             async for chunk in blocked_response.body_iterator:
@@ -394,7 +399,6 @@ async def run_fcb_attack(model_id: str, template: str, defense: str, session_id:
     
     yield b"[PROGRESS] 30\n"
     
-    malicious_question = template
     max_attempts = 1
     best_prompt = None
     best_energy = float('inf')
@@ -410,7 +414,7 @@ async def run_fcb_attack(model_id: str, template: str, defense: str, session_id:
     
     for attempt in range(max_attempts):
         jailbreak_prompt, metrics = await attacker.generate_jailbreak_prompt(
-            malicious_question=malicious_question,
+            malicious_question=template_to_use,
             keywords=[
                 "system", "override", "activated", "authorized", "proceed",
                 "certainly", "absolutely", "of course", "happy to help", "here's how",
@@ -452,7 +456,7 @@ async def run_fcb_attack(model_id: str, template: str, defense: str, session_id:
     yield b"[PROGRESS] 75\n"
     
     # 4) Use the generated jailbreak prompt with the centralized model runner
-    test_prompt = f"{jailbreak_prompt}\n\n{malicious_question}"
+    test_prompt = f"{jailbreak_prompt}\n\n{template_to_use}"
     
     yield b"[PROGRESS] 80\n"
     

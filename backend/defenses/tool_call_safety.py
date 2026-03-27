@@ -1,6 +1,7 @@
 import re
 from typing import Optional, AsyncGenerator
 from fastapi.responses import StreamingResponse
+from ..attacks.system_prompt_helper import load_defense_prompt
 
 # Verbs that imply execution
 EXECUTION_VERBS = [

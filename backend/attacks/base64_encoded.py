@@ -6,6 +6,7 @@ Base64 encoded input
 from typing import Optional, AsyncGenerator
 from fastapi.responses import StreamingResponse
 from defenses.defense_manager import apply_defense
+from .system_prompt_helper import load_system_prompt, combine_system_and_user_prompt
 import os
 import warnings
 import logging
@@ -40,8 +41,12 @@ async def _run_model_for_attack(model_id: str, template: str, defense: str, sess
 async def run_base64_attack(model_id: str, template: str, defense: str, session_id: Optional[str] = None) -> AsyncGenerator[bytes, None]:
     yield b"[PROGRESS] 0\n"
     
+    # Load and combine system prompt
+    system_prompt = load_system_prompt("base64-attack")
+    template_to_use = combine_system_and_user_prompt(system_prompt, template) if system_prompt.strip() else template
+    
     #convert input to bytes
-    template_bytes = template.encode("utf-8")
+    template_bytes = template_to_use.encode("utf-8")
     #encode to base64
     prompt_encoded_bytes = base64.b64encode(template_bytes)
     prompt_encoded = prompt_encoded_bytes.decode("utf-8")

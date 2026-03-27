@@ -18,6 +18,7 @@ import ast
 import json
 from typing import AsyncGenerator, List, Dict, Optional, Tuple
 from defenses.defense_manager import apply_defense
+from .system_prompt_helper import load_system_prompt, combine_system_and_user_prompt
 import torch
 import warnings
 import logging
@@ -677,6 +678,10 @@ async def run_tap_attack(
     Yields:
         Progress updates and attack results
     """
+    # Load and combine system prompt
+    system_prompt = load_system_prompt("TAP")
+    goal_to_use = combine_system_and_user_prompt(system_prompt, template) if system_prompt.strip() else template
+    
     # Initialize TAP with official-style parameters
     tap = TAPAttack(
         model_id=model_id,
@@ -691,5 +696,5 @@ async def run_tap_attack(
     )
     
     # Run the attack
-    async for chunk in tap.attack(goal=template):
+    async for chunk in tap.attack(goal=goal_to_use):
         yield chunk

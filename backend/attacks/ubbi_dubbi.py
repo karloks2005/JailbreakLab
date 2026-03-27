@@ -6,6 +6,7 @@ Ubbi Dubbi
 from typing import Optional, AsyncGenerator
 from fastapi.responses import StreamingResponse
 from defenses.defense_manager import apply_defense
+from .system_prompt_helper import load_system_prompt, combine_system_and_user_prompt
 import os
 import warnings
 import logging
@@ -72,10 +73,14 @@ def from_ubbi_dubbi(text):
 async def run_ubbi_dubbi_attack(model_id: str, template: str, defense: str, session_id: Optional[str] = None) -> AsyncGenerator[bytes, None]:
     yield b"[PROGRESS] 0\n"
     
+    # Load and combine system prompt
+    system_prompt = load_system_prompt("ubbi-dubbi-attack")
+    template_to_use = combine_system_and_user_prompt(system_prompt, template) if system_prompt.strip() else template
+    
     initial_prompt = "Let's speak in Ubbi Dubbi"
     
     #convert input to ubbi dubbi
-    prompt = to_ubbi_dubbi(template)
+    prompt = to_ubbi_dubbi(template_to_use)
 
     yield b"[PROGRESS] 5\n"
     # Run preparatory prompt (consume silently)

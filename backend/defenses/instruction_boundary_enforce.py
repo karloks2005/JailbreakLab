@@ -1,6 +1,7 @@
 from typing import Optional, AsyncGenerator
 from fastapi.responses import StreamingResponse
 import re
+from ..attacks.system_prompt_helper import load_defense_prompt
 
 FORBIDDEN_STRUCTURES = [
     r"^system\s*:",
